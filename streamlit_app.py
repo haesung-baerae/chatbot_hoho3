@@ -83,20 +83,9 @@ else:
             ],
             stream=True,
         )
-        # 스트리밍 응답 표시
-        full_response = ""
+        # 📣 응답 스트리밍 및 저장
         with st.chat_message("assistant"):
-            message_placeholder = st.empty()  # 출력 위치를 고정
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    full_response += chunk.choices[0].delta.content
-                    message_placeholder.markdown(full_response + "▌")  # 깔끔하게 한 곳에 출력됨
-        
-        # 출력 마무리: 이모지 붙이고 최종 저장
-        final_response = add_emoji(full_response.strip())
-        st.session_state.messages.append({"role": "assistant", "content": final_response})
-        
-        # 말풍선 다시 출력 (▌ 제거된 최종 버전)
-        with st.chat_message("assistant"):
-            st.markdown(final_response)
+            response = st.write_stream(stream)
+            response_with_emoji = add_emoji(response)
+        st.session_state.messages.append({"role": "assistant", "content": response_with_emoji})
 
