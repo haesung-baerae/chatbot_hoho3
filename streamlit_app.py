@@ -16,34 +16,31 @@ st.write(
 """
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
+# 🔑 API 키 입력
 openai_api_key = st.text_input("OpenAI API Key", type="password")
 if not openai_api_key:
     st.info("Please add your OpenAI API key to continue.", icon="🗝️")
 else:
-
-    # Create an OpenAI client.
     client = OpenAI(api_key=openai_api_key)
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
     if "messages" not in st.session_state:
         st.session_state.messages = []
         st.session_state.messages.append({
             "role": "assistant",
             "content": "안녕하세요, 저는 '오늘의 호호'예요 😊\n지금 마음은 어떤가요? 편하게 이야기해 주세요."
         })
-    # 🪄 감정 이모지 추가 함수
+
+    # 🪄 감정 이모지 추가
     def add_emoji(text):
         emojis = ["😊", "🌼", "🌈", "✨", "☕", "💖", "🍀"]
         return text + " " + random.choice(emojis)
-    # Display the existing chat messages via `st.chat_message`.
+
+    # 💬 이전 대화 표시
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-    # 🎲 랜덤 입력 프롬프트
+
+    # 🎲 랜덤 입력 문구
     input_prompts = [
         "마음 속 이야기를 들려줄래요?",
         "오늘 어떤 일이 있었나요?",
@@ -53,17 +50,14 @@ else:
     ]
     selected_prompt = random.choice(input_prompts)
 
-    # 🗣️ 사용자 입력
+    # 입력 받기
     prompt = st.chat_input(selected_prompt)
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt:
 
-        # Store and display the current prompt.
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-        # 💡 시스템 프롬프트
+
         system_prompt = """
         너는 '오늘의 호호'라는 이름의 챗봇이야.
         사람들의 고민을 따뜻하게 들어주고, 다정하고 친근한 말투로 공감과 위로를 건네주는 역할이야.
@@ -72,7 +66,8 @@ else:
         딱딱하거나 차가운 말투는 절대 쓰지 말고, 조언이 필요할 땐 부드럽게 이끌어줘.
         너의 목표는 사용자가 '호호~' 웃을 수 있도록 따뜻한 말을 전해주는 거야.
         """
-        # Generate a response using the OpenAI API.
+
+        # GPT-4o로 스트리밍 응답 받기
         stream = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -83,9 +78,19 @@ else:
             ],
             stream=True,
         )
-        # 📣 응답 스트리밍 및 저장
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-            response_with_emoji = add_emoji(response)
-        st.session_state.messages.append({"role": "assistant", "content": response_with_emoji})
 
+        # 스트리밍 처리
+        full_response = ""
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    full_response += chunk.choices[0].delta.content
+                    message_placeholder.markdown(full_response + "▌")  # 타이핑 효과
+
+        final_response = add_emoji(full_response.strip())
+        st.session_state.messages.append({"role": "assistant", "content": final_response})
+
+        # 최종 응답 다시 출력
+        with st.chat_message("assistant"):
+            st.markdown(final_response)
