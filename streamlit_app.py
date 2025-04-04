@@ -83,18 +83,20 @@ else:
             ],
             stream=True,
         )
-        # 🪄 응답 스트리밍 처리 및 저장
+        # 스트리밍 응답 표시
         full_response = ""
         with st.chat_message("assistant"):
+            message_placeholder = st.empty()  # 출력 위치를 고정
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     full_response += chunk.choices[0].delta.content
-                    st.markdown(full_response + "▌")  # typing 효과
-                    
-        # 마지막 출력 (▌ 제거, 이모지 추가)
+                    message_placeholder.markdown(full_response + "▌")  # 깔끔하게 한 곳에 출력됨
+        
+        # 출력 마무리: 이모지 붙이고 최종 저장
         final_response = add_emoji(full_response.strip())
         st.session_state.messages.append({"role": "assistant", "content": final_response})
-
-        # 결과 다시 출력
+        
+        # 말풍선 다시 출력 (▌ 제거된 최종 버전)
         with st.chat_message("assistant"):
             st.markdown(final_response)
+
