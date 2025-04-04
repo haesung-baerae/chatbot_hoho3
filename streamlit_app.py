@@ -1,12 +1,19 @@
 import streamlit as st
 from openai import OpenAI
+import random
 
-# Show title and description.
-st.title("💬 Chatbot")
+# 🎈 Streamlit UI 설정
+st.title("💬 오늘의 호호")
 st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+"""
+지친 마음을 살짝 어루만져 주고,  
+하루에 한 번, 따뜻한 말 한마디로  
+당신을 ‘호호~’ 웃게 해주는 챗봇이에요.
+
+고민이 있을 땐 털어놓고,  
+의욕이 필요할 땐 말 걸어보세요.  
+언제나 곁에서 다정하게 들어줄게요.
+"""
 )
 
 # Ask user for their OpenAI API key via `st.text_input`.
@@ -24,7 +31,10 @@ else:
     # messages persist across reruns.
     if "messages" not in st.session_state:
         st.session_state.messages = []
-
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": "안녕하세요, 저는 '오늘의 호호'예요 😊\n지금 마음은 어떤가요? 편하게 이야기해 주세요."
+        })
     # Display the existing chat messages via `st.chat_message`.
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
